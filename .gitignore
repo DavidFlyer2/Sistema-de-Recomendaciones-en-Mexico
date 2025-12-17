@@ -1,0 +1,50 @@
+# 1. Crear archivo .gitignore para excluir archivos innecesarios
+echo "# Python
+venv_stable/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Modelos y datos grandes
+models/*.pkl
+models/*.idx
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Entorno
+.env
+.env.local" > .gitignore
+
+# 2. Ahora sí, agregar solo los archivos necesarios
+git add .gitignore
+git add main.py
+git add src/
+git add data/
+git add index.html
+
+# 3. Hacer el commit
+git commit -m "Initial commit: Sistema híbrido de recomendación"
+
+# 4. Renombrar rama a main
+git branch -M main
+
+# 5. Conectar con tu repositorio remoto
+git remote add origin https://github.com/DavidFlyer2/Sistema-de-Recomendaciones-en-Mexico.git
+
+# 6. Subir al repositorio
+git push -u origin main

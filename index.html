@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demostración API Híbrida (FastAPI/LLM)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; background: #f4f4f9; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { border-bottom: 2px solid #007bff; padding-bottom: 10px; color: #333; }
+        input[type="text"] { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #28a745; color: white; padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 16px; }
+        button:hover { background-color: #218838; }
+        .results { margin-top: 20px; padding: 15px; background: #e9ecef; border-radius: 4px; }
+        .result-item { border-bottom: 1px dashed #adb5bd; padding: 8px 0; }
+        .result-item:last-child { border-bottom: none; }
+        .error { color: #dc3545; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Sistema de Recomendación Híbrido MX</h2>
+    <p>Consumo directo de la API FastAPI (Puerto 8000) en el mismo PC.</p>
+    
+    <label for="query">Consulta NLP (LLM + CB):</label>
+    <input type="text" id="query" value="Quiero un destino colonial con mucha historia y buena gastronomía.">
+    
+    <label for="userId">ID de Usuario (CF):</label>
+    <input type="text" id="userId" value="1" style="width: 100px;">
+    
+    <button onclick="fetchRecommendations()">Obtener Recomendaciones Híbridas</button>
+
+    <div id="loading" style="display: none; color: #007bff; margin-top: 10px;">Cargando...</div>
+    <div id="results" class="results"></div>
+    <div id="error" class="error"></div>
+</div>
+
+<script>
+    const API_URL = 'http://127.0.0.1:8000/recommend/query';
+    const resultsDiv = document.getElementById('results');
+    const errorDiv = document.getElementById('error');
+    const loadingDiv = document.getElementById('loading');
+
+    async function fetchRecommendations() {
+        const queryText = document.getElementById('query').value;
+        const userId = document.getElementById('userId').value;
+        
+        resultsDiv.innerHTML = '';
+        errorDiv.innerHTML = '';
+        loadingDiv.style.display = 'block';
+
+        const url = `${API_URL}?query_text=${encodeURIComponent(queryText)}&user_id=${userId}&n=5`;
+
+        try {
+            const response = await fetch(url, { method: 'POST' });
+
+            if (!response.ok) {
+                throw new Error(`Error HTTP ${response.status}: El servidor Python falló.`);
+            }
+
+            const data = await response.json();
+            const recommendations = data.recommendations || [];
+            
+            if (recommendations.length === 0) {
+                resultsDiv.innerHTML = '<p>No se encontraron resultados para esta consulta.</p>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<h3>Recomendaciones Híbridas (Top 5)</h3>';
+            recommendations.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'result-item';
+                itemDiv.innerHTML = `
+                    <strong>${index + 1} ${item.city}, ${item.state}</strong>
+                    (ID: ${item.id_destino})
+                `;
+                resultsDiv.appendChild(itemDiv);
+            });
+
+        } catch (error) {
+            console.error(error);
+            errorDiv.innerHTML = `Error de conexión: ${error.message}. Asegúrese de que Uvicorn esté corriendo.`;
+        } finally {
+            loadingDiv.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
